@@ -1,1 +1,3 @@
 # Al-Baik-Self-ordering-kiosk
+
+A REACT PROJECT FOR SELF-ORDERING KIOSK
