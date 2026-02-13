@@ -286,3 +286,13 @@ a { text-decoration: none; color: inherit; }
 .remove-btn:hover {
   color: var(--primary-red);
 }
+.order-id-badge {
+  background: #eee;
+  padding: 5px 15px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #666;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+}
