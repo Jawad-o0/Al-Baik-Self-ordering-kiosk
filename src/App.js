@@ -236,7 +236,28 @@ const Checkout = () => {
   const [showModal, setShowModal] = useState(false);
   const total = cart.reduce((acc, item) => acc + item.finalPrice, 0);
 
-  const closeAndTrack = () => { setShowModal(false); navigate('/track'); };
+  const closeAndTrack = () => { 
+    setShowModal(false); 
+    navigate('/track'); 
+  };
+
+  // --- NEW: THE CELEBRATION LOGIC ---
+  const handlePayment = () => {
+    // Check if confetti script is loaded from index.html
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#E3000F', '#ffffff', '#000000'] // Albaik Brand Colors
+      });
+    }
+
+    // Small delay for the "celebration" to breathe before the modal pops up
+    setTimeout(() => {
+      setShowModal(true);
+    }, 600);
+  };
 
   return (
     <div className="page-container">
@@ -261,7 +282,9 @@ const Checkout = () => {
           ))}
           <div className="divider"></div>
           <div className="total-row"><span>Total</span><span>PKR {total}</span></div>
-          <button className="checkout-btn" onClick={() => setShowModal(true)}>
+          
+          {/* Updated onClick here */}
+          <button className="checkout-btn" onClick={handlePayment}>
             Proceed to Payment <ChevronRight size={18}/>
           </button>
         </div>
