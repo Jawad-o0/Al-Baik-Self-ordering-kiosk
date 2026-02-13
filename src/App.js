@@ -64,11 +64,18 @@ const SuccessModal = ({ onClose }) => (
 const MenuItem = ({ data }) => {
   const { addToCart } = useContext(CartContext);
   const [garlicCount, setGarlicCount] = useState(1);
-  const [isSpicy, setIsSpicy] = useState(false); // Default: Regular
+  const [isSpicy, setIsSpicy] = useState(false);
+  const [isAdded, setIsAdded] = useState(false); // New: Success feedback state
 
-  // Algorithm: First sauce free ($0), others 50 PKR
   const garlicCost = garlicCount > 1 ? (garlicCount - 1) * 50 : 0;
   const totalItemPrice = data.basePrice + garlicCost;
+
+  // Personality Logic for Garlic Labels
+  const getGarlicLabel = (count) => {
+    if (count === 1) return "Standard Garlic";
+    if (count === 2) return "Garlic Lover";
+    return "Vampire Proof 🧛‍♂️";
+  };
 
   const handleAdd = () => {
     addToCart({ 
@@ -78,14 +85,20 @@ const MenuItem = ({ data }) => {
       isSpicy, 
       finalPrice: totalItemPrice 
     });
+    
+    // Trigger Success Animation
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1500);
+    
     setGarlicCount(1);
-    setIsSpicy(false); // Reset to regular
+    setIsSpicy(false);
   };
 
   return (
-    <div className="menu-card">
+    <div className={`menu-card ${isSpicy ? 'spicy-border' : ''}`}>
       <div className="card-image-container">
         <img src={data.image} alt={data.name} className="card-img" />
+        {isSpicy && <div className="heat-overlay">EXTREME HEAT 🔥</div>}
       </div>
       
       <div className="card-header">
@@ -93,30 +106,36 @@ const MenuItem = ({ data }) => {
         <span className="price">PKR {data.basePrice}</span>
       </div>
       
-      {/* Smart Spicy Toggle Button */}
       <div className="control-row">
         <button 
-          className={`smart-toggle ${isSpicy ? 'active-spicy' : 'active-regular'}`}
+          className={`smart-toggle ${isSpicy ? 'active-spicy shake-animation' : 'active-regular'}`}
           onClick={() => setIsSpicy(!isSpicy)}
         >
-          {isSpicy ? "🔥 SPICY" : "REGULAR"}
+          {isSpicy ? "🔥 CONFIRM SPICY" : "GO REGULAR?"}
         </button>
       </div>
 
-      {/* Garlic Controls */}
       <div className="control-row garlic-row">
-        <span>Garlic Sauce ({garlicCount})</span>
+        <span>{getGarlicLabel(garlicCount)} ({garlicCount})</span>
         <div className="counter">
           <button onClick={() => setGarlicCount(Math.max(1, garlicCount - 1))}><Minus size={16} /></button>
           <button onClick={() => setGarlicCount(garlicCount + 1)}><Plus size={16} /></button>
         </div>
       </div>
       <div className="garlic-info">
-        {garlicCount === 1 ? "1 Free Sauce included" : `+${garlicCost} PKR for extra sauce`}
+        {garlicCount === 1 ? "1st sauce is on the house!" : `+${garlicCost} PKR (Extra Intensity)`}
       </div>
 
-      <button className="add-btn" onClick={handleAdd}>
-        Add to Tray - PKR {totalItemPrice}
+      <button 
+        className={`add-btn ${isAdded ? 'added-success' : ''}`} 
+        onClick={handleAdd}
+        disabled={isAdded}
+      >
+        {isAdded ? (
+          <><Check size={18} /> Added to Tray!</>
+        ) : (
+          `Add to Tray - PKR ${totalItemPrice}`
+        )}
       </button>
     </div>
   );
