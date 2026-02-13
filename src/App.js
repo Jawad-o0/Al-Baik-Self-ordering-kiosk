@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react
 import { ShoppingBag, ChevronRight, Check, Minus, Plus, Trash2 } from 'lucide-react';
 import './App.css';
 
-// --- 1. STATE MANAGEMENT (Optimized Cart Context) ---
+// --- 1. STATE MANAGEMENT (Advanced Cart Logic) ---
 const CartContext = createContext();
 
 const CartProvider = ({ children }) => {
@@ -11,7 +11,7 @@ const CartProvider = ({ children }) => {
 
   const addToCart = (item) => {
     setCart((prevCart) => {
-      // Check if item with same ID, Spice level, AND Garlic count exists
+      // Logic: Group items if ID, Spice Level, and Garlic count are identical
       const existingItemIndex = prevCart.findIndex(
         (i) => i.id === item.id && i.isSpicy === item.isSpicy && i.garlicCount === item.garlicCount
       );
@@ -37,7 +37,7 @@ const CartProvider = ({ children }) => {
   );
 };
 
-// --- 2. COMPONENTS ---
+// --- 2. SHARED COMPONENTS ---
 
 const Navbar = () => {
   const { cart } = useContext(CartContext);
@@ -65,16 +65,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-const SuccessModal = ({ onClose }) => (
-  <div className="modal-overlay">
-    <div className="modal-content">
-      <div className="success-icon">🎉</div>
-      <h3>Order Placed!</h3>
-      <p>Your Albaik is being prepared.</p>
-      <button onClick={onClose} className="close-btn">Track Order</button>
-    </div>
-  </div>
-);
+// --- 3. MENU ITEM COMPONENT ---
 
 const MenuItem = ({ data }) => {
   const { addToCart } = useContext(CartContext);
@@ -149,7 +140,7 @@ const MenuItem = ({ data }) => {
   );
 };
 
-// --- PAGES ---
+// --- 4. PAGES ---
 
 const Home = () => {
   const menuItems = [
@@ -170,7 +161,7 @@ const Home = () => {
             <span className="text-red">KARACHI</span><br />
             <span className="text-black">TASTE THE LEGEND</span>
           </h1>
-          <p className="hero-subtext">The crunch you waited for is here. Order online and skip the line.</p>
+          <p className="hero-subtext">The crunch you waited for is finally here. Order online and skip the line.</p>
           <a href="#menu" className="cta-button">View Menu</a>
         </div>
         <div className="hero-image">
@@ -198,9 +189,16 @@ const Checkout = () => {
   const { cart, removeFromCart } = useContext(CartContext);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [orderID, setOrderID] = useState('');
+
   const total = cart.reduce((acc, item) => acc + item.displayPrice, 0);
 
   const handlePayment = () => {
+    // Generate Unique Order ID (e.g., BK-7291)
+    const newOrderID = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+    setOrderID(newOrderID);
+    localStorage.setItem('currentOrderID', newOrderID);
+
     if (window.confetti) {
       window.confetti({
         particleCount: 150,
@@ -214,7 +212,22 @@ const Checkout = () => {
 
   return (
     <div className="page-container">
-      {showModal && <SuccessModal onClose={() => { setShowModal(false); navigate('/track'); }} />}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="success-icon">🎉</div>
+            <h3>Order Placed!</h3>
+            <p style={{ fontWeight: 'bold', color: 'var(--primary-red)', margin: '10px 0' }}>
+               Order ID: {orderID}
+            </p>
+            <p>Your Albaik is being prepared.</p>
+            <button onClick={() => { setShowModal(false); navigate('/track'); }} className="close-btn">
+              Track Order
+            </button>
+          </div>
+        </div>
+      )}
+
       <h2>Your Tray</h2>
       {cart.length === 0 ? (
         <div className="empty-state">
@@ -226,7 +239,9 @@ const Checkout = () => {
           {cart.map((item) => (
             <div key={item.uniqueId} className="cart-item">
               <div style={{ flex: 1 }}>
-                <h4>{item.name} {item.quantity > 1 && <span style={{color: '#888'}}>x{item.quantity}</span>}</h4>
+                <h4>
+                  {item.name} {item.quantity > 1 && <span style={{color: '#888'}}>x{item.quantity}</span>}
+                </h4>
                 {item.isSpicy && <span className="spicy-tag">🔥 SPICY</span>}
                 <div className="details">Garlic Sauces: {item.garlicCount}</div>
               </div>
@@ -251,6 +266,8 @@ const Checkout = () => {
 
 const Tracker = () => {
   const [timeLeft, setTimeLeft] = useState(15);
+  const orderID = localStorage.getItem('currentOrderID') || '#BK-XXXX';
+
   useEffect(() => {
     if (timeLeft > 0) {
       const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
@@ -262,6 +279,7 @@ const Tracker = () => {
 
   return (
     <div className="page-container tracker-page">
+      <span className="order-id-badge">{orderID}</span>
       <h2>Order Status</h2>
       <div className={`status-circle ${isReady ? 'ready' : 'preparing'}`}>
         {isReady ? <Check size={60} /> : <span className="countdown">{timeLeft}</span>}
@@ -272,10 +290,14 @@ const Tracker = () => {
   );
 };
 
+// --- 5. MAIN APP ---
+
 const App = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => { setTimeout(() => setLoading(false), 2000); }, []);
+  
   if (loading) return <LoadingScreen />;
+  
   return (
     <CartProvider>
       <Router>
