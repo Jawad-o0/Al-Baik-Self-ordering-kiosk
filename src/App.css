@@ -207,3 +207,47 @@ a { text-decoration: none; color: inherit; }
   .hero-heading { font-size: 3rem; }
   .menu-label { font-size: 2.5rem; }
 }
+/* Extreme Heat Overlay on Image */
+.heat-overlay {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(227, 0, 15, 0.9); color: white;
+  padding: 5px 12px; border-radius: 8px; font-weight: 800;
+  font-size: 0.7rem; letter-spacing: 1px;
+  animation: pulse 0.8s infinite;
+}
+
+/* Spicy Border Glow */
+.spicy-border {
+  border: 2px solid var(--primary-red);
+  box-shadow: 0 0 20px rgba(227, 0, 15, 0.2) !important;
+}
+
+/* Add to Tray Success State */
+.added-success {
+  background: #2ecc71 !important;
+  transform: scale(0.98);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+
+/* Fire Glow Animation for Spicy Button */
+.active-spicy {
+  background: var(--primary-red);
+  color: white;
+  animation: fire-glow 1.5s infinite alternate;
+}
+
+@keyframes fire-glow {
+  from { box-shadow: 0 0 5px #E3000F; }
+  to { box-shadow: 0 0 20px #E3000F; }
+}
+
+/* Subtle Shake when turning Spicy */
+.shake-animation {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
