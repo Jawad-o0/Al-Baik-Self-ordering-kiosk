@@ -1,20 +1,37 @@
 import React, { useState, useEffect, useContext, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, ChevronRight, Check, Minus, Plus } from 'lucide-react';
+import { ShoppingBag, ChevronRight, Check, Minus, Plus, Trash2 } from 'lucide-react';
 import './App.css';
 
-// --- 1. STATE MANAGEMENT (Cart Context) ---
+// --- 1. STATE MANAGEMENT (Optimized Cart Context) ---
 const CartContext = createContext();
 
 const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
   const addToCart = (item) => {
-    setCart([...cart, item]);
+    setCart((prevCart) => {
+      // Check if item with same ID, Spice level, AND Garlic count exists
+      const existingItemIndex = prevCart.findIndex(
+        (i) => i.id === item.id && i.isSpicy === item.isSpicy && i.garlicCount === item.garlicCount
+      );
+
+      if (existingItemIndex > -1) {
+        const newCart = [...prevCart];
+        newCart[existingItemIndex].quantity += 1;
+        newCart[existingItemIndex].displayPrice += item.finalPrice;
+        return newCart;
+      }
+      return [...prevCart, { ...item, quantity: 1, displayPrice: item.finalPrice }];
+    });
+  };
+
+  const removeFromCart = (uniqueId) => {
+    setCart((prevCart) => prevCart.filter((item) => item.uniqueId !== uniqueId));
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart }}>
       {children}
     </CartContext.Provider>
   );
@@ -22,9 +39,10 @@ const CartProvider = ({ children }) => {
 
 // --- 2. COMPONENTS ---
 
-// Navbar: Glassmorphism & Sticky
 const Navbar = () => {
   const { cart } = useContext(CartContext);
+  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  
   return (
     <nav className="navbar">
       <Link to="/" className="logo">ALBAIK</Link>
@@ -34,21 +52,19 @@ const Navbar = () => {
         <Link to="/checkout" className="tray-btn">
           <ShoppingBag size={20} />
           <span>Tray</span>
-          {cart.length > 0 && <span className="badge">{cart.length}</span>}
+          {totalItems > 0 && <span className="badge">{totalItems}</span>}
         </Link>
       </div>
     </nav> 
   );
 };
 
-// Loading Screen
 const LoadingScreen = () => (
   <div className="loader-container">
     <h1 className="pulsating-logo">ALBAIK</h1>
   </div>
 );
 
-// Success Modal
 const SuccessModal = ({ onClose }) => (
   <div className="modal-overlay">
     <div className="modal-content">
@@ -60,17 +76,15 @@ const SuccessModal = ({ onClose }) => (
   </div>
 );
 
-// Menu Item with Smart Spicy Toggle & Garlic Logic
 const MenuItem = ({ data }) => {
   const { addToCart } = useContext(CartContext);
   const [garlicCount, setGarlicCount] = useState(1);
   const [isSpicy, setIsSpicy] = useState(false);
-  const [isAdded, setIsAdded] = useState(false); // New: Success feedback state
+  const [isAdded, setIsAdded] = useState(false);
 
   const garlicCost = garlicCount > 1 ? (garlicCount - 1) * 50 : 0;
   const totalItemPrice = data.basePrice + garlicCost;
 
-  // Personality Logic for Garlic Labels
   const getGarlicLabel = (count) => {
     if (count === 1) return "Standard Garlic";
     if (count === 2) return "Garlic Lover";
@@ -86,10 +100,8 @@ const MenuItem = ({ data }) => {
       finalPrice: totalItemPrice 
     });
     
-    // Trigger Success Animation
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 1500);
-    
     setGarlicCount(1);
     setIsSpicy(false);
   };
@@ -131,11 +143,7 @@ const MenuItem = ({ data }) => {
         onClick={handleAdd}
         disabled={isAdded}
       >
-        {isAdded ? (
-          <><Check size={18} /> Added to Tray!</>
-        ) : (
-          `Add to Tray - PKR ${totalItemPrice}`
-        )}
+        {isAdded ? <><Check size={18} /> Added!</> : `Add to Tray - PKR ${totalItemPrice}`}
       </button>
     </div>
   );
@@ -143,50 +151,18 @@ const MenuItem = ({ data }) => {
 
 // --- PAGES ---
 
-// Home Page: Split Hero & Menu
 const Home = () => {
   const menuItems = [
-    { 
-      id: 1, 
-      name: "Spicy Chicken Fillet", 
-      basePrice: 950, 
-      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" 
-    },
-    { 
-      id: 2, 
-      name: "Double Big Baik", 
-      basePrice: 950, 
-      image: "https://menualbaik.com/wp-content/uploads/2024/05/Big_baik-removebg-preview.webp" 
-    },
-    { 
-      id: 3, 
-      name: "Chicken Nuggets (10pc)", 
-      basePrice: 1050, 
-      image: "https://img.freepik.com/premium-photo/chicken-nuggets-hd-8k-wallpaper-stock-photographic-image_890746-23978.jpg" 
-    },
-    { 
-      id: 4, 
-      name: "Jumbo Shrimp Meal", 
-      basePrice: 1450, 
-      image: "https://images.unsplash.com/photo-1623961990059-28356e226a77?auto=format&fit=crop&w=800&q=80" 
-    },
-    { 
-      id: 5, 
-      name: "French fries(LARGE)",
-      basePrice: 450,
-      image: "https://www.albaikfoods.in/public/uploads/menu-items/lights-bites/french-fries.png"
-    },
-    {
-      id: 6,
-      name: "Spicy Meat Tacos (4pc)",
-      basePrice: 600,
-      image: "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=800&q=80"
-    },
+    { id: 1, name: "Spicy Chicken Fillet", basePrice: 950, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" },
+    { id: 2, name: "Double Big Baik", basePrice: 950, image: "https://menualbaik.com/wp-content/uploads/2024/05/Big_baik-removebg-preview.webp" },
+    { id: 3, name: "Chicken Nuggets (10pc)", basePrice: 1050, image: "https://img.freepik.com/premium-photo/chicken-nuggets-hd-8k-wallpaper-stock-photographic-image_890746-23978.jpg" },
+    { id: 4, name: "Jumbo Shrimp Meal", basePrice: 1450, image: "https://images.unsplash.com/photo-1623961990059-28356e226a77?auto=format&fit=crop&w=800&q=80" },
+    { id: 5, name: "French fries(LARGE)", basePrice: 450, image: "https://www.albaikfoods.in/public/uploads/menu-items/lights-bites/french-fries.png" },
+    { id: 6, name: "Spicy Meat Tacos (4pc)", basePrice: 600, image: "https://images.unsplash.com/photo-1552332386-f8dd00dc2f85?auto=format&fit=crop&w=800&q=80" },
   ];
 
   return (
     <div>
-      {/* 50/50 Split Hero Section */}
       <header className="hero-split">
         <div className="hero-text">
           <span className="company-tag">ALBAIK</span>
@@ -194,22 +170,12 @@ const Home = () => {
             <span className="text-red">KARACHI</span><br />
             <span className="text-black">TASTE THE LEGEND</span>
           </h1>
-          <p className="hero-subtext">
-            The crunch you waited for is finally here.<br />
-            Order online and skip the line.
-          </p>
+          <p className="hero-subtext">The crunch you waited for is here. Order online and skip the line.</p>
           <a href="#menu" className="cta-button">View Menu</a>
         </div>
-
         <div className="hero-image">
           <div className="image-wrapper">
-             <img 
-               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStmjDIa9pVCGSDO4kGMblULzhcbcsqKyd8IA&s" 
-               alt="Albaik Bucket" 
-               className="floating-img" 
-             />
-             
-             {/* Floating Badge */}
+             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStmjDIa9pVCGSDO4kGMblULzhcbcsqKyd8IA&s" alt="Albaik Bucket" className="floating-img" />
              <div className="floating-badge">
                <div className="badge-title">NOW SERVING 🔥</div>
                <div className="badge-line"></div>
@@ -218,7 +184,6 @@ const Home = () => {
           </div>
         </div>
       </header>
-
       <div id="menu" className="page-container">
         <div className="menu-label">OUR MENU</div>
         <div className="menu-grid">
@@ -229,39 +194,27 @@ const Home = () => {
   );
 };
 
-// Checkout Page
 const Checkout = () => {
-  const { cart } = useContext(CartContext);
+  const { cart, removeFromCart } = useContext(CartContext);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const total = cart.reduce((acc, item) => acc + item.finalPrice, 0);
+  const total = cart.reduce((acc, item) => acc + item.displayPrice, 0);
 
-  const closeAndTrack = () => { 
-    setShowModal(false); 
-    navigate('/track'); 
-  };
-
-  // --- NEW: THE CELEBRATION LOGIC ---
   const handlePayment = () => {
-    // Check if confetti script is loaded from index.html
     if (window.confetti) {
       window.confetti({
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#E3000F', '#ffffff', '#000000'] // Albaik Brand Colors
+        colors: ['#E3000F', '#ffffff', '#000000']
       });
     }
-
-    // Small delay for the "celebration" to breathe before the modal pops up
-    setTimeout(() => {
-      setShowModal(true);
-    }, 600);
+    setTimeout(() => setShowModal(true), 600);
   };
 
   return (
     <div className="page-container">
-      {showModal && <SuccessModal onClose={closeAndTrack} />}
+      {showModal && <SuccessModal onClose={() => { setShowModal(false); navigate('/track'); }} />}
       <h2>Your Tray</h2>
       {cart.length === 0 ? (
         <div className="empty-state">
@@ -272,18 +225,21 @@ const Checkout = () => {
         <div className="cart-list">
           {cart.map((item) => (
             <div key={item.uniqueId} className="cart-item">
-              <div>
-                <h4>{item.name}</h4>
+              <div style={{ flex: 1 }}>
+                <h4>{item.name} {item.quantity > 1 && <span style={{color: '#888'}}>x{item.quantity}</span>}</h4>
                 {item.isSpicy && <span className="spicy-tag">🔥 SPICY</span>}
                 <div className="details">Garlic Sauces: {item.garlicCount}</div>
               </div>
-              <div className="item-price">PKR {item.finalPrice}</div>
+              <div style={{ textAlign: 'right' }}>
+                <div className="item-price">PKR {item.displayPrice}</div>
+                <button onClick={() => removeFromCart(item.uniqueId)} className="remove-btn">
+                  <Trash2 size={14} /> Remove
+                </button>
+              </div>
             </div>
           ))}
           <div className="divider"></div>
           <div className="total-row"><span>Total</span><span>PKR {total}</span></div>
-          
-          {/* Updated onClick here */}
           <button className="checkout-btn" onClick={handlePayment}>
             Proceed to Payment <ChevronRight size={18}/>
           </button>
@@ -293,7 +249,6 @@ const Checkout = () => {
   );
 };
 
-// Tracker Page
 const Tracker = () => {
   const [timeLeft, setTimeLeft] = useState(15);
   useEffect(() => {
@@ -317,7 +272,6 @@ const Tracker = () => {
   );
 };
 
-// Main App
 const App = () => {
   const [loading, setLoading] = useState(true);
   useEffect(() => { setTimeout(() => setLoading(false), 2000); }, []);
