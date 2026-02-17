@@ -296,3 +296,55 @@ a { text-decoration: none; color: inherit; }
   margin-bottom: 1rem;
   letter-spacing: 1px;
 }
+/* --- FINAL MOBILE OVERRIDES (Add at the very bottom) --- */
+@media (max-width: 768px) {
+  
+  /* 1. Navbar: Shrink spacing so items don't overlap */
+  .navbar {
+    padding: 10px 1rem;
+  }
+  .nav-links {
+    font-size: 0.8rem;
+    gap: 10px;
+  }
+  .tray-btn {
+    padding: 6px 12px;
+  }
+
+  /* 2. Hero Section: Adjust spacing and text sizes */
+  .hero-split {
+    padding-top: 80px; /* Space for the sticky navbar */
+    gap: 1.5rem;
+  }
+
+  .hero-heading {
+    font-size: 2.5rem; /* Smaller headline for phone screens */
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtext {
+    font-size: 1rem;
+    padding: 0 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* 3. Hero Image: Shrink the chicken/food image */
+  .floating-img {
+    max-width: 280px; /* Prevents it from taking over the whole screen */
+    min-width: auto;
+  }
+
+  /* 4. Menu Section: Scale down the giant 'MENU' label */
+  .menu-label {
+    font-size: 2.2rem;
+    margin-bottom: 2rem;
+  }
+
+  /* 5. Floating Badge: Move it so it doesn't cover the food */
+  .floating-badge {
+    bottom: 20px;
+    right: 10px;
+    padding: 10px 15px;
+    min-width: 120px;
+  }
+}
