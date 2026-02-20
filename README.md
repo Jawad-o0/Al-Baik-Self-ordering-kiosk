@@ -1,4 +1,4 @@
-# 🍗 Albaik Karachi - High-Fidelity E-Commerce Experience
+#  Albaik Karachi - High-Fidelity E-Commerce Experience
 
 A premium, interactive food ordering platform built with **React.js**, focusing on micro-interactions, complex state management, and brand-driven UI/UX.
 
